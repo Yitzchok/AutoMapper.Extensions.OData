@@ -31,6 +31,24 @@ namespace AutoMapper.AspNet.OData
             return (Expression<Func<T, bool>>)(whereMethodCallExpression.Arguments[1].Unquote() as LambdaExpression);
         }
 
+        /// <summary>
+        /// Returns a lambda expression representing the filter
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="filterOption"></param>
+        /// <returns></returns>
+        public static Expression<Func<T, bool>> ToFilterExpression<T>(this IODataFilter filterOption, IODataQuerySettings querySettings)
+        {
+            if (filterOption == null)
+                return null;
+
+            IQueryable queryable = Enumerable.Empty<T>().AsQueryable();
+            queryable = filterOption.ApplyTo(queryable, querySettings);
+            MethodCallExpression whereMethodCallExpression = (MethodCallExpression)queryable.Expression;
+
+            return (Expression<Func<T, bool>>)(whereMethodCallExpression.Arguments[1].Unquote() as LambdaExpression);
+        }
+
         public static Expression<Func<IQueryable<T>, long>> GetCountExpression<T>(Expression filter = null)
         {
             ParameterExpression param = Expression.Parameter(typeof(IQueryable<T>), "q");
@@ -44,8 +62,8 @@ namespace AutoMapper.AspNet.OData
                 typeof(Queryable),
                 "LongCount",
                 new Type[] { param.GetUnderlyingElementType() },
-                filter == null 
-                    ? new Expression[] { param } 
+                filter == null
+                    ? new Expression[] { param }
                     : new Expression[] { param, filter }
             );
         }
@@ -69,6 +87,19 @@ namespace AutoMapper.AspNet.OData
             );
         }
 
+        public static Expression<Func<IQueryable<T>, IQueryable<T>>> GetQueryableExpression<T>(this IODataQueryOptions options)
+        {
+            if (options.OrderBy == null && options.Top == null)
+                return null;
+
+            ParameterExpression param = Expression.Parameter(typeof(IQueryable<T>), "q");
+
+            return Expression.Lambda<Func<IQueryable<T>, IQueryable<T>>>
+            (
+                param.GetOrderByMethod<T>(options), param
+            );
+        }
+
         [Obsolete("Use \"public static Expression GetOrderByMethod<T>(this Expression expression, ODataQueryOptions<T> options)\" instead.")]
         public static Expression GetOrderByMethod<T>(this ODataQueryOptions<T> options, Expression expression)
             => expression.GetOrderByMethod<T>(options);
@@ -84,6 +115,20 @@ namespace AutoMapper.AspNet.OData
                 typeof(T),
                 options.Skip?.Value,
                 options.Top?.Value
+            );
+        }
+
+        public static Expression GetOrderByMethod<T>(this Expression expression, IODataQueryOptions options)
+        {
+            if (options.OrderBy == null && options.Top == null)
+                return null;
+
+            return expression.GetQueryableMethod
+            (
+                options.OrderBy,
+                typeof(T),
+                options.Skip,
+                options.Top
             );
         }
 

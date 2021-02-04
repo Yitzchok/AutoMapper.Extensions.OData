@@ -19,15 +19,19 @@ namespace AutoMapper.AspNet.OData
             where TModel : class
             => query.Get(mapper, options, querySettings?.ODataSettings?.HandleNullPropagation ?? HandleNullPropagationOption.False);
 
-        public static async Task<ICollection<TModel>> GetAsync<TModel, TData>(this IQueryable<TData> query, IMapper mapper, ODataQueryOptions<TModel> options, HandleNullPropagationOption handleNullPropagation = HandleNullPropagationOption.False)
+        public static Task<ICollection<TModel>> GetAsync<TModel, TData>(this IQueryable<TData> query, IMapper mapper, ODataQueryOptions<TModel> options, HandleNullPropagationOption handleNullPropagation = HandleNullPropagationOption.False)
+            where TModel : class
+            => query.GetAsync<TModel, TData>(mapper, new AspNetODataQueryOptions<TModel>(options), new AspNetODataQuerySettings { QuerySettings = new ODataQuerySettings { HandleNullPropagation = handleNullPropagation } });
+
+        public static async Task<ICollection<TModel>> GetAsync<TModel, TData>(this IQueryable<TData> query, IMapper mapper, IODataQueryOptions options, IODataQuerySettings querySettings = null)
             where TModel : class
         {
-            Expression<Func<TModel, bool>> filter = options.Filter.ToFilterExpression<TModel>(handleNullPropagation);
-            Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> queryableExpression = options.GetQueryableExpression();
+            Expression<Func<TModel, bool>> filter = options.Filter.ToFilterExpression<TModel>(querySettings);
+            Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> queryableExpression = options.GetQueryableExpression<TModel>();
             Expression<Func<IQueryable<TModel>, long>> countExpression = LinqExtensions.GetCountExpression<TModel>(filter);
 
-            options.AddExpandOptionsResult();
-            if (options.Count?.Value == true)
+            options.AddExpandOptionsResult<TModel>();
+            if (options.Count == true)
                 options.AddCountOptionsResult<TModel, TData>(await query.QueryAsync(mapper, countExpression));
 
             return await query.GetAsync(mapper, filter, queryableExpression);
@@ -86,7 +90,7 @@ namespace AutoMapper.AspNet.OData
             //Map and return the data
             return mapper.Map<IEnumerable<TData>, IEnumerable<TModel>>(result).ToList();
         }
-        
+
         public static Task<IQueryable<TModel>> GetQueryAsync<TModel, TData>(this IQueryable<TData> query, IMapper mapper,
             Expression<Func<TModel, bool>> filter = null,
             Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> queryFunc = null,

@@ -29,6 +29,7 @@
     <Compile Include="..\AutoMapper.AspNetCore.OData\Properties\Resources.Designer.cs" Link="Properties\Resources.Designer.cs" />
     <Compile Include="..\AutoMapper.AspNetCore.OData\QuerySettings.cs" Link="QuerySettings.cs" />
     <Compile Include="..\AutoMapper.AspNetCore.OData\TypeExtensions.cs" Link="TypeExtensions.cs" />
+    <Compile Include="..\AutoMapper.AspNetCore.OData\IODataQueryOptions.cs" Link="IODataQueryOptions.cs" />
     <Compile Include="..\AutoMapper.AspNetCore.OData\Visitors\ChildCollectionFilterUpdater.cs" Link="Visitors\ChildCollectionFilterUpdater.cs" />
     <Compile Include="..\AutoMapper.AspNetCore.OData\Visitors\ChildCollectionOrderByUpdater.cs" Link="Visitors\ChildCollectionOrderByUpdater.cs" />
     <Compile Include="..\AutoMapper.AspNetCore.OData\Visitors\FilterAppender.cs" Link="Visitors\FilterAppender.cs" />
