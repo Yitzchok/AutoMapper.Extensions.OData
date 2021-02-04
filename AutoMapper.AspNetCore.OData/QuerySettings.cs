@@ -8,7 +8,9 @@
         /// <summary>
         /// Settings for configuring OData options on the server
         /// </summary>
-        public ODataSettings ODataSettings { get; set; }
+        public ODataSettings ODataSettings { get => (ODataSettings)ODataQuerySettings; set => ODataQuerySettings = value; }
+
+        public IODataQuerySettings ODataQuerySettings { get; set; }
 
         /// <summary>
         /// Miscellaneous arguments for IMapper.ProjectTo

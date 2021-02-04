@@ -5,7 +5,7 @@ namespace AutoMapper.AspNet.OData
     /// <summary>
     /// Settings for configuring OData options on the server
     /// </summary>
-    public class ODataSettings
+    public class ODataSettings : IODataQuerySettings
     {
         /// <summary>
         /// Gets or sets a value indicating how null propagation should

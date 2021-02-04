@@ -45,7 +45,11 @@ namespace AutoMapper.AspNet.OData
             where TModel : class
             => query.GetQueryAsync(mapper, options, new QuerySettings { ODataSettings = new ODataSettings { HandleNullPropagation = handleNullPropagation } });
 
-        public static async Task<IQueryable<TModel>> GetQueryAsync<TModel, TData>(this IQueryable<TData> query, IMapper mapper, ODataQueryOptions<TModel> options, QuerySettings querySettings = null)
+        public static Task<IQueryable<TModel>> GetQueryAsync<TModel, TData>(this IQueryable<TData> query, IMapper mapper, ODataQueryOptions<TModel> options, QuerySettings querySettings = null)
+            where TModel : class
+            => query.GetQueryAsync<TModel, TData>(mapper, new AspNetODataQueryOptions<TModel>(options), querySettings);
+
+        public static async Task<IQueryable<TModel>> GetQueryAsync<TModel, TData>(this IQueryable<TData> query, IMapper mapper, IODataQueryOptions options, QuerySettings querySettings = null)
             where TModel : class
         {
             var expansions = options.SelectExpand.GetExpansions(typeof(TModel));
@@ -55,12 +59,12 @@ namespace AutoMapper.AspNet.OData
             )
             .ToList();
 
-            Expression<Func<TModel, bool>> filter = options.Filter.ToFilterExpression<TModel>(querySettings?.ODataSettings?.HandleNullPropagation ?? HandleNullPropagationOption.False);
-            Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> queryableExpression = options.GetQueryableExpression();
+            Expression<Func<TModel, bool>> filter = options.Filter.ToFilterExpression<TModel>(querySettings?.ODataQuerySettings);
+            Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> queryableExpression = options.GetQueryableExpression<TModel>();
             Expression<Func<IQueryable<TModel>, long>> countExpression = LinqExtensions.GetCountExpression<TModel>(filter);
 
-            options.AddExpandOptionsResult();
-            if (options.Count?.Value == true)
+            options.AddExpandOptionsResult<TModel>();
+            if (options.Count == true)
                 options.AddCountOptionsResult<TModel, TData>(await query.QueryAsync(mapper, countExpression));
 
             IQueryable<TModel> queryable = await query.GetQueryAsync(mapper, filter, queryableExpression, includeExpressions, querySettings?.ProjectionSettings);

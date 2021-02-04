@@ -36,6 +36,7 @@ namespace AutoMapper.AspNet.OData
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="filterOption"></param>
+        /// <param name="querySettings"></param>
         /// <returns></returns>
         public static Expression<Func<T, bool>> ToFilterExpression<T>(this IODataFilter filterOption, IODataQuerySettings querySettings)
         {
@@ -377,7 +378,7 @@ namespace AutoMapper.AspNet.OData
             return clause.SelectExpandClause.GetSelects();
         }
 
-        private static List<string> GetSelects(this SelectExpandClause clause)
+        public static List<string> GetSelects(this SelectExpandClause clause)
         {
             if (clause == null)
                 return new List<string>();
@@ -431,8 +432,16 @@ namespace AutoMapper.AspNet.OData
         {
             if (clause?.SelectExpandClause == null)
                 return new List<List<ODataExpansionOptions>>();
+            
+            return clause.SelectExpandClause.GetExpansions(parentType);
+        }
 
-            return clause.SelectExpandClause.SelectedItems.GetExpansions(new HashSet<string>(clause.GetSelects()), parentType);
+        public static List<List<ODataExpansionOptions>> GetExpansions(this SelectExpandClause clause, Type parentType)
+        {
+            if (clause == null)
+                return new List<List<ODataExpansionOptions>>();
+
+            return clause.SelectedItems.GetExpansions(new HashSet<string>(clause.GetSelects()), parentType);
         }
 
         private static List<List<ODataExpansionOptions>> GetNestedExpansions(this ExpandedNavigationSelectItem node, Type type)

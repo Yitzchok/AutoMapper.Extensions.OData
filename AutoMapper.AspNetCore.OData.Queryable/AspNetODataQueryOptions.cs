@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.OData.UriParser;
@@ -45,8 +46,23 @@ namespace AutoMapper.AspNet.OData
 
         public IQueryable ApplyTo(IQueryable query, IODataQuerySettings querySettings)
         {
-            var odataQuerySettings = (AspNetODataQuerySettings)querySettings;
-            return filterQueryOption?.ApplyTo(query, odataQuerySettings.QuerySettings);
+            var querySettingsToUse = new ODataQuerySettings { HandleNullPropagation = HandleNullPropagationOption.False };
+
+            switch (querySettings)
+            {
+                case null:
+                    break;
+                case ODataSettings settings:
+                    querySettingsToUse.HandleNullPropagation = settings.HandleNullPropagation;
+                    break;
+                case AspNetODataQuerySettings odataQuerySettings:
+                    querySettingsToUse.HandleNullPropagation = odataQuerySettings.QuerySettings.HandleNullPropagation;
+                    break;
+                default:
+                    throw new NotSupportedException();
+            }
+
+            return filterQueryOption?.ApplyTo(query, querySettingsToUse);
         }
     }
 
